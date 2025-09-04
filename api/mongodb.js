@@ -1,13 +1,37 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://dsavio83:p%40Dsavio%402025@soll-vilaiyattu.mlihwos.mongodb.net/soll-vilaiyattu?retryWrites=true&w=majority';
 
-// Models
-const models = {};
+let cachedConnection = null;
 
-// User Schema
+const connectDB = async () => {
+  if (cachedConnection) {
+    return cachedConnection;
+  }
+  
+  try {
+    const connection = await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 20000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      retryWrites: true,
+      w: 'majority',
+      bufferCommands: false,
+      bufferMaxEntries: 0
+    });
+    
+    cachedConnection = connection;
+    return connection;
+  } catch (error) {
+    throw new Error('Database connection failed: ' + error.message);
+  }
+};
+
+// Schemas
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password_hash: { type: String, required: true },
@@ -15,7 +39,6 @@ const userSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now }
 });
 
-// Student Schema
 const studentSchema = new mongoose.Schema({
   admission_number: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -24,7 +47,6 @@ const studentSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now }
 });
 
-// Word Puzzle Schema
 const wordPuzzleSchema = new mongoose.Schema({
   game_date: { type: String, required: true, unique: true },
   center_letter: { type: String, required: true },
@@ -38,7 +60,6 @@ const wordPuzzleSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now }
 });
 
-// User Scores Schema
 const userScoresSchema = new mongoose.Schema({
   student_id: { type: String, required: true },
   found_words_list: [String],
@@ -50,7 +71,6 @@ const userScoresSchema = new mongoose.Schema({
   last_played_date: { type: String, required: true }
 });
 
-// Leaderboard Score Schema
 const leaderboardScoreSchema = new mongoose.Schema({
   student_id: { type: String, required: true },
   admission_number: { type: String, required: true },
@@ -67,35 +87,28 @@ const leaderboardScoreSchema = new mongoose.Schema({
   completed_at: { type: Date, default: Date.now }
 });
 
-// Initialize models
-if (!models.users) models.users = mongoose.model('User', userSchema);
-if (!models.students) models.students = mongoose.model('Student', studentSchema);
-if (!models.word_puzzle) models.word_puzzle = mongoose.model('WordPuzzle', wordPuzzleSchema);
-if (!models.user_scores) models.user_scores = mongoose.model('UserScore', userScoresSchema);
-if (!models.leaderboard_score) models.leaderboard_score = mongoose.model('LeaderboardScore', leaderboardScoreSchema);
+const adsConfigSchema = new mongoose.Schema({
+  ad_unit_id: { type: String, required: true },
+  ad_format: { type: String, required: true },
+  is_active: { type: Boolean, default: true },
+  created_at: { type: Date, default: Date.now }
+});
 
-let isConnected = false;
-
-const connectDB = async () => {
-  if (isConnected) return;
-  
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 15000,
-      socketTimeoutMS: 20000,
-      maxPoolSize: 10,
-      minPoolSize: 5,
-      maxIdleTimeMS: 30000,
-      retryWrites: true,
-      w: 'majority'
-    });
-    isConnected = true;
-  } catch (error) {
-    throw new Error('Database connection failed: ' + error.message);
-  }
+// Models
+const getModel = (name, schema) => {
+  return mongoose.models[name] || mongoose.model(name, schema);
 };
 
-export default async function handler(req, res) {
+const models = {
+  users: () => getModel('User', userSchema),
+  students: () => getModel('Student', studentSchema),
+  word_puzzle: () => getModel('WordPuzzle', wordPuzzleSchema),
+  user_scores: () => getModel('UserScore', userScoresSchema),
+  leaderboard_score: () => getModel('LeaderboardScore', leaderboardScoreSchema),
+  ads_config: () => getModel('AdsConfig', adsConfigSchema)
+};
+
+module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -123,7 +136,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: `Unknown table: ${table}` });
     }
 
-    const Model = models[table];
+    const Model = models[table]();
 
     switch (action) {
       case 'find':
@@ -167,7 +180,7 @@ export default async function handler(req, res) {
         return res.json({ data: result, error: null });
 
       case 'insert':
-        const insertResult = await Model.insertMany(data);
+        const insertResult = await Model.insertMany(Array.isArray(data) ? data : [data]);
         return res.json({ data: insertResult, error: null });
 
       case 'update':
@@ -207,6 +220,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `Unknown action: ${action}` });
     }
   } catch (error) {
+    console.error('API Error:', error);
     return res.status(500).json({ error: error.message });
   }
-}
+};
