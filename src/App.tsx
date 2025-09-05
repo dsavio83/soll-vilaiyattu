@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +10,15 @@ import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-const queryClient = new QueryClient();
+// Create QueryClient outside component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected Route Component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -19,18 +26,14 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   return isAdminAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
-const App = () => {
-  // MongoDB doesn't need session management like Supabase
-  // Authentication is handled in AuthContext
-
-
+const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
@@ -42,7 +45,6 @@ const App = () => {
                   </ProtectedAdminRoute>
                 } 
               />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

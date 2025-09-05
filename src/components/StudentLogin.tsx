@@ -18,13 +18,12 @@ const StudentLogin = ({ onLogin }: StudentLoginProps) => {
       try {
         const { data, error } = await mongodb
           .from('students')
-          .select('count(*)')
           .limit(1);
         
         if (error) {
           console.error('Database connection test failed:', error);
         } else {
-
+          console.log('Database connection successful');
         }
       } catch (err) {
         console.error('Database connection error:', err);
@@ -50,27 +49,16 @@ const StudentLogin = ({ onLogin }: StudentLoginProps) => {
     try {
       const { data, error } = await mongodb
         .from('students')
-        .select('*')
         .eq('admission_number', admissionNumber.trim())
         .single();
 
       if (error) {
         console.error('Database error:', error);
-        if (error.code === 'PGRST116') {
-          // No rows returned - user not found
-          toast({
-            title: "User Not Found",
-            description: "Admission number not found. Please check your admission number or contact your teacher.",
-            variant: "destructive"
-          });
-        } else {
-          // Other database errors
-          toast({
-            title: "Database Error",
-            description: `Connection error: ${error.message}`,
-            variant: "destructive"
-          });
-        }
+        toast({
+          title: "Database Error",
+          description: `Connection error: ${error.message}`,
+          variant: "destructive"
+        });
         return;
       }
 
@@ -83,11 +71,16 @@ const StudentLogin = ({ onLogin }: StudentLoginProps) => {
         return;
       }
 
-      onLogin(data);
+
+      // Ensure _id is available for MongoDB operations
+      const studentWithId = {
+        ...data,
+        _id: data._id || data.id || data.admission_number
+      };
+      onLogin(studentWithId);
       toast({
         title: "Welcome!",
         description: `Welcome ${data.name}!`,
-        variant: "success"
       });
     } catch (error) {
       console.error('Login error:', error);

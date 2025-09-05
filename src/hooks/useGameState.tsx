@@ -105,7 +105,6 @@ export const useGameState = () => {
       // First check if already completed in leaderboard_score
       const { data: leaderboardData } = await mongodb
         .from('leaderboard_score')
-        .select('*')
         .eq('student_id', studentId)
         .eq('game_date', today)
         .eq('complete_game', true)
@@ -145,7 +144,6 @@ export const useGameState = () => {
       // Check user_scores for ongoing game
       const { data: userScoreData } = await mongodb
         .from('user_scores')
-        .select('*')
         .eq('student_id', studentId)
         .single();
 
@@ -582,16 +580,25 @@ export const useGameState = () => {
 
   const moveToLeaderboard = async (studentData: Student) => {
     if (!studentData || foundWords.length === 0) {
-
+      console.log('Missing studentData or foundWords');
       return false;
     }
 
     try {
       const timeTaken = gameStartTime ? Math.floor((Date.now() - gameStartTime) / 1000) : 0;
 
+      // Get the student ID - use _id for MongoDB, fallback to admission_number
+      const studentId = studentData._id || studentData.id || studentData.admission_number;
+      
+      if (!studentId) {
+        console.error('No student ID found:', studentData);
+        return false;
+      }
+      
+
       
       // Check if this is a guest user
-      const isGuest = studentData.admission_number === 'GUEST' || studentData._id.startsWith('guest-');
+      const isGuest = studentData.admission_number === 'GUEST' || String(studentId).startsWith('guest-');
       
       if (isGuest) {
         // Handle guest user data saving - for guests, just save to leaderboard
@@ -599,20 +606,19 @@ export const useGameState = () => {
         const today = new Date().toISOString().split('T')[0];
         const { data: existingGuestEntry } = await mongodb
           .from('leaderboard_score')
-          .select('id')
-          .eq('student_id', studentData.id)
+          .eq('student_id', String(studentId))
           .eq('game_date', today)
           .single();
 
         if (existingGuestEntry) {
-
+  
           return true;
         }
 
         const { error } = await mongodb
           .from('leaderboard_score')
-          .insert({
-            student_id: studentData.id,
+          .insert([{
+            student_id: String(studentId),
             admission_number: studentData.admission_number,
             name: studentData.name,
             class: studentData.class || 'Guest',
@@ -624,7 +630,7 @@ export const useGameState = () => {
             complete_game: true,
             attempt_count: attemptCount,
             game_date: today
-          });
+          }]);
 
         if (error) {
           console.error('Error saving guest user data:', error);
@@ -640,8 +646,7 @@ export const useGameState = () => {
         // Check if already exists to prevent duplicates
         const { data: existingEntry } = await mongodb
           .from('leaderboard_score')
-          .select('id')
-          .eq('student_id', studentData.id)
+          .eq('student_id', String(studentId))
           .eq('game_date', today)
           .single();
 
@@ -653,8 +658,8 @@ export const useGameState = () => {
         // Insert into leaderboard_score
         const { error: leaderboardError } = await mongodb
           .from('leaderboard_score')
-          .insert({
-            student_id: studentData.id,
+          .insert([{
+            student_id: String(studentId),
             admission_number: studentData.admission_number,
             name: studentData.name,
             class: studentData.class,
@@ -666,7 +671,7 @@ export const useGameState = () => {
             complete_game: true,
             attempt_count: attemptCount,
             game_date: today
-          });
+          }]);
 
         if (leaderboardError) {
           console.error('Error saving to leaderboard:', leaderboardError);
@@ -678,7 +683,7 @@ export const useGameState = () => {
         // Delete from user_scores
         const { error: deleteError } = await mongodb
           .from('user_scores')
-          .eq('student_id', studentData.id)
+          .eq('student_id', String(studentId))
           .delete();
 
         if (deleteError) {

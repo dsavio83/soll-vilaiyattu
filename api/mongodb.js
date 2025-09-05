@@ -2,20 +2,20 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://dsavio83:p%40Dsavio%402025@soll-vilaiyattu.mlihwos.mongodb.net/soll-vilaiyattu?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 let cachedConnection = null;
 
 const connectDB = async () => {
-  if (cachedConnection) {
+  if (cachedConnection && mongoose.connection.readyState === 1) {
     return cachedConnection;
   }
   
   try {
     const connection = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 15000,
-      socketTimeoutMS: 20000,
-      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 10000,
+      maxPoolSize: 5,
       minPoolSize: 1,
       maxIdleTimeMS: 30000,
       retryWrites: true,
@@ -108,7 +108,7 @@ const models = {
   ads_config: () => getModel('AdsConfig', adsConfigSchema)
 };
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -223,4 +223,4 @@ module.exports = async (req, res) => {
     console.error('API Error:', error);
     return res.status(500).json({ error: error.message });
   }
-};
+}

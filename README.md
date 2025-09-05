@@ -1,56 +1,46 @@
-# Welcome to your Lovable project
+# Soll Vilaiyattu - Tamil Word Game
 
-## Project info
+A Tamil word puzzle game built with React, TypeScript, and MongoDB.
 
-There are several ways of editing your application.
+## Live Demo
+[https://soll-vilaiyattu.vercel.app](https://soll-vilaiyattu.vercel.app)
 
+## Features
+- Daily Tamil word puzzles
+- Student login system
+- Real-time leaderboard
+- Game analytics and progress tracking
+- Mobile-first responsive design
+- PWA support
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Tech Stack
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Backend**: Node.js, MongoDB
+- **Deployment**: Vercel
+- **Database**: MongoDB Atlas
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Environment Variables
+Create a `.env` file with:
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+```
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Local Development
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
+This project is configured for Vercel deployment:
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Admin Credentials
+- Username: `admin`
+- Password: `admin123`
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
+## License
+MIT License

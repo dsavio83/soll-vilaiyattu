@@ -1,4 +1,16 @@
 // Browser-compatible MongoDB client that makes HTTP requests to API endpoints
+
+// Resolve API base URL. Priority:
+// 1) VITE_API_BASE env (e.g., http://localhost:3001/api)
+// 2) If running on a non-Vite dev port (not 8080), fall back to backend default
+// 3) Default to '/api' (Vite dev proxy)
+const API_BASE = (() => {
+  // @ts-ignore
+  const envBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || undefined;
+  if (envBase) return envBase.replace(/\/$/, '');
+  return '/api';
+})();
+
 class MongoDBTable {
   private tableName: string;
   private query: any = {};
@@ -60,7 +72,7 @@ class MongoDBTable {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +112,7 @@ class MongoDBTable {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +155,7 @@ class MongoDBTable {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +196,7 @@ class MongoDBTable {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,7 +238,7 @@ class MongoDBTable {
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,14 +253,37 @@ class MongoDBTable {
 
       clearTimeout(timeoutId);
 
-      const result = await response.json();
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch (e) {
+        // Response is not JSON (likely proxy/server error). Try to read text for diagnostics.
+        const text = await response.text().catch(() => '');
+        return {
+          data: null,
+          error: {
+            message: text || `Request failed with status ${response.status}`,
+            status: response.status
+          }
+        };
+      }
+
+      if (!response.ok) {
+        return {
+          data: null,
+          error: {
+            message: (result?.error || result?.message || `Request failed with status ${response.status}`),
+            status: response.status
+          }
+        };
+      }
       
-      if (result.code === 'DB_UNAVAILABLE') {
+      if (result && result.code === 'DB_UNAVAILABLE') {
         console.warn('Database unavailable, using fallback behavior');
         return { data: null, error: { message: result.error, code: 'DB_UNAVAILABLE' } };
       }
       
-      return { data: result.data, error: result.error };
+      return { data: result?.data ?? null, error: result?.error ?? null };
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -262,7 +297,7 @@ class MongoDBTable {
 
   async single() {
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,15 +311,36 @@ class MongoDBTable {
         })
       });
 
-      const result = await response.json();
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch (e) {
+        const text = await response.text().catch(() => '');
+        return {
+          data: null,
+          error: {
+            message: text || `Request failed with status ${response.status}`,
+            status: response.status
+          }
+        };
+      }
+
+      if (!response.ok) {
+        return {
+          data: null,
+          error: {
+            message: (result?.error || result?.message || `Request failed with status ${response.status}`),
+            status: response.status
+          }
+        };
+      }
       
-      // Handle database unavailable error
-      if (result.code === 'DB_UNAVAILABLE') {
+      if (result && result.code === 'DB_UNAVAILABLE') {
         console.warn('Database unavailable, using fallback behavior');
         return { data: null, error: { message: result.error, code: 'DB_UNAVAILABLE' } };
       }
       
-      return { data: result.data, error: result.error };
+      return { data: result?.data ?? null, error: result?.error ?? null };
     } catch (error: any) {
       console.error('MongoDB client error:', error);
       return { data: null, error: { message: error.message } };
@@ -294,7 +350,7 @@ class MongoDBTable {
   // For backward compatibility - this makes the object awaitable
   async then(resolve: any, reject?: any) {
     try {
-      const response = await fetch('/api/mongodb', {
+      const response = await fetch(`${API_BASE}/mongodb`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -309,8 +365,38 @@ class MongoDBTable {
         })
       });
 
-      const result = await response.json();
-      resolve({ data: result.data, error: result.error });
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch (e) {
+        const text = await response.text().catch(() => '');
+        resolve({
+          data: null,
+          error: {
+            message: text || `Request failed with status ${response.status}`,
+            status: response.status
+          }
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        resolve({
+          data: null,
+          error: {
+            message: (result?.error || result?.message || `Request failed with status ${response.status}`),
+            status: response.status
+          }
+        });
+        return;
+      }
+
+      if (result && result.code === 'DB_UNAVAILABLE') {
+        resolve({ data: null, error: { message: result.error, code: 'DB_UNAVAILABLE' } });
+        return;
+      }
+
+      resolve({ data: result?.data ?? null, error: result?.error ?? null });
     } catch (error) {
       if (reject) reject(error);
       else throw error;

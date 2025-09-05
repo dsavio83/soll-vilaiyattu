@@ -17,6 +17,7 @@ import NextGameCountdown from '../components/NextGameCountdown';
 import PWAInstallBanner from '../components/PWAInstallBanner';
 import GameCompletionMessage from '../components/GameCompletionMessage';
 import GameCompletionScreen from '../components/GameCompletionScreen';
+import GameAnalysisPage from '../components/GameAnalysisPage';
 import UserHeader from '../components/UserHeader';
 import GoogleAds from '../components/GoogleAds';
 import InterstitialAd from '../components/InterstitialAd';
@@ -162,7 +163,7 @@ const Index = () => {
       checkIfPlayedToday();
       fetchSocialScore();
       checkGameAvailability();
-      fetchCompletionCount(studentData.id);
+      fetchCompletionCount(studentData._id);
       
       // Persist session
       localStorage.setItem('student_session', JSON.stringify(studentData));
@@ -185,8 +186,7 @@ const Index = () => {
     
     const { data } = await mongodb
       .from('students')
-      .select('social_score')
-      .eq('id', studentData.id)
+      .eq('_id', studentData._id)
       .single();
     
     setSocialScore(data?.social_score || 0);
@@ -226,8 +226,7 @@ const Index = () => {
         // Check if data exists in leaderboard_score
         const { data: leaderboardData } = await mongodb
           .from('leaderboard_score')
-          .select('*')
-          .eq('student_id', studentData.id)
+          .eq('student_id', studentData._id)
           .eq('game_date', today)
           .eq('complete_game', true)
           .single();
@@ -255,7 +254,7 @@ const Index = () => {
 
       if (success) {
         // Check if this is a guest user
-        const isGuest = studentData.admission_number === 'GUEST' || studentData.id.startsWith('guest-');
+        const isGuest = studentData.admission_number === 'GUEST' || String(studentData._id).startsWith('guest-');
 
         if (!isGuest) {
           // Calculate time-based social score
@@ -265,15 +264,14 @@ const Index = () => {
           // Update students table social_score only for registered students
           const { data: currentStudent } = await mongodb
             .from('students')
-            .select('social_score')
-            .eq('id', studentData.id)
+            .eq('_id', studentData._id)
             .single();
 
           if (currentStudent) {
             const newSocialScore = (currentStudent.social_score || 0) + timeBasedScore;
             const { error: socialScoreError } = await mongodb
               .from('students')
-              .eq('id', studentData.id)
+              .eq('_id', studentData._id)
               .update({ social_score: newSocialScore });
 
             if (socialScoreError) console.error('Error updating social score:', socialScoreError);
@@ -414,13 +412,13 @@ const Index = () => {
         setWordNotification({ type: 'duplicate', word });
         
         // Save attempt count to database even for duplicate words
-        if (studentData?.id) {
+        if (studentData?._id) {
           const timingJson = JSON.stringify(wordTimings);
           const today = new Date().toISOString().split('T')[0];
           
           mongodb
             .from('user_scores')
-            .eq('student_id', studentData.id)
+            .eq('student_id', studentData._id)
             .update({
               attempt_count: newAttemptCount,
               last_played_date: today
@@ -434,7 +432,7 @@ const Index = () => {
 
       // Check if word is valid
       if (allValidWords.includes(word)) {
-        const success = addWord(word, studentData?.id);
+        const success = addWord(word, studentData?._id);
         if (success) {
           setCurrentInput('');
           setWordNotification({ type: 'correct', word });
@@ -450,13 +448,13 @@ const Index = () => {
         setWordNotification({ type: 'wrong', word });
         
         // Save attempt count to database even for invalid words
-        if (studentData?.id) {
+        if (studentData?._id) {
           const timingJson = JSON.stringify(wordTimings);
           const today = new Date().toISOString().split('T')[0];
           
           mongodb
             .from('user_scores')
-            .eq('student_id', studentData.id)
+            .eq('student_id', studentData._id)
             .update({
               attempt_count: newAttemptCount,
               last_played_date: today
@@ -513,7 +511,7 @@ const Index = () => {
       try {
         await mongodb
           .from('user_scores')
-          .eq('student_id', studentData.id)
+          .eq('student_id', studentData._id)
           .update({ completion_count: newCompletionCount });
       } catch (error) {
         console.error('Error updating completion count:', error);
@@ -524,7 +522,53 @@ const Index = () => {
   const handleStudentLogin = async (student: Student) => {
 
     
-    // Reset ALL game state for new user
+    setStudentData(student);
+    
+    // Check today's leaderboard first
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const { data: leaderboardEntry } = await mongodb
+        .from('leaderboard_score')
+        .eq('admission_number', student.admission_number)
+        .eq('game_date', today)
+        .eq('complete_game', true)
+        .single();
+
+      if (leaderboardEntry) {
+        // User completed today - redirect to completion page
+        setHasPlayedToday(true);
+        setIsGameComplete(true);
+        setTodayScore({
+          score: leaderboardEntry.score || 0,
+          words_found: leaderboardEntry.words_found || 0,
+          time_taken: leaderboardEntry.time_taken || 0,
+          attempt_count: leaderboardEntry.attempt_count || 0
+        });
+        
+        if (leaderboardEntry.found_words) {
+          try {
+            const words = JSON.parse(leaderboardEntry.found_words);
+            setFoundWords(words);
+          } catch (e) {
+            console.error('Error parsing found words:', e);
+          }
+        }
+        
+        if (leaderboardEntry.found_words_time) {
+          try {
+            const timings = JSON.parse(leaderboardEntry.found_words_time);
+            setWordTimings(timings);
+          } catch (e) {
+            console.error('Error parsing word timings:', e);
+          }
+        }
+        return;
+      }
+    } catch (error) {
+
+    }
+    
+    // Reset game state for new game
     setHasPlayedToday(false);
     setTodayScore(null);
     setShowCompletionEffect(false);
@@ -536,86 +580,19 @@ const Index = () => {
     setWordNotification(null);
     setAttemptCount(0);
     
-    setStudentData(student);
-    
-    // Check if user is in today's leaderboard first
-    const today = new Date().toISOString().split('T')[0];
-    try {
-      const { data: leaderboardEntry } = await mongodb
-        .from('leaderboard_score')
-        .select('*')
-        .eq('admission_number', student.admission_number)
-        .eq('game_date', today)
-        .eq('complete_game', true)
-        .single();
-
-      if (leaderboardEntry) {
-        // User has completed today's game - show completion analytics
-
-        setHasPlayedToday(true);
-        setIsGameComplete(true);
-        setTodayScore({
-          score: leaderboardEntry.score || 0,
-          words_found: leaderboardEntry.words_found || 0,
-          time_taken: leaderboardEntry.time_taken || 0,
-          attempt_count: leaderboardEntry.attempt_count || 0
-        });
-        
-        // Parse and set found words if available
-        if (leaderboardEntry.found_words) {
-          try {
-            const words = JSON.parse(leaderboardEntry.found_words);
-            setFoundWords(words);
-          } catch (e) {
-            console.error('Error parsing found words:', e);
-          }
-        }
-        
-        return;
-      }
-    } catch (error) {
-
-    }
-    
-    // Reset game state in the hook and wait for it to finish
     await resetGame();
     
-    // Check today's progress for this specific user
+    // Initialize for new game
     try {
-      const result = await checkTodayProgress(student.admission_number, student.id);
-
+      const result = await checkTodayProgress(student.admission_number, student._id);
       
-      // If it's a fresh start, initialize user progress
       if (result?.isFresh) {
-        await initializeUserProgress(student.id, student.name, student.class, student.admission_number);
+        await initializeUserProgress(student._id, student.name, student.class, student.admission_number);
       }
-
-      // Rely on checkTodayProgress result for game input state
+      
       setIsGameInputDisabled(!result.canPlay);
-
-      // If it's a fresh start, initialize user progress and local storage
-      if (result?.isFresh) {
-        await initializeUserProgress(student.id, student.name, student.class, student.admission_number);
-        const today = new Date().toISOString().split('T')[0];
-        const initialGameData = {
-          admission_number: student.admission_number,
-          name: student.name,
-          class: student.class,
-          foundCorrectWordsList: [],
-          time: 0,
-          attemptCount: 0,
-          date: today,
-        };
-        localStorage.setItem('currentGameData', JSON.stringify(initialGameData));
-        localStorage.setItem('canPlayToday', 'true'); // User can play
-      } else if (result?.isComplete) {
-        localStorage.setItem('canPlayToday', 'false'); // User cannot play
-      } else if (result?.isOngoing) {
-        localStorage.setItem('canPlayToday', 'true'); // User can continue playing
-      }
-
     } catch (error) {
-      console.error('Error checking progress or leaderboard:', error);
+      console.error('Error checking progress:', error);
     }
   };
 
@@ -663,9 +640,12 @@ const Index = () => {
   }
 
   if (hasPlayedToday && todayScore) {
-    return <GameCompletionScreen 
+    return <GameAnalysisPage 
       studentData={studentData}
       todayScore={todayScore}
+      foundWords={foundWords}
+      wordTimings={wordTimings}
+      totalWords={totalWords}
       onLogout={handleLogout}
       onViewLeaderboard={() => navigate('/leaderboard')}
     />;
@@ -853,7 +833,7 @@ const Index = () => {
         foundWords={foundWords}
         allValidWords={allValidWords}
         totalWords={totalWords}
-        studentId={studentData?.id}
+        studentId={studentData?._id}
         initialTab={activeTab}
       />
 
