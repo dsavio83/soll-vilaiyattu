@@ -1,35 +1,50 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-let cachedConnection = null;
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable');
+}
 
-const connectDB = async () => {
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    return cachedConnection;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
   }
-  
-  try {
-    const connection = await mongoose.connect(MONGODB_URI, {
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 10000,
       maxPoolSize: 5,
       minPoolSize: 1,
       maxIdleTimeMS: 30000,
       retryWrites: true,
-      w: 'majority',
-      bufferCommands: false,
-      bufferMaxEntries: 0
+      w: 'majority'
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      return mongoose;
     });
-    
-    cachedConnection = connection;
-    return connection;
-  } catch (error) {
-    throw new Error('Database connection failed: ' + error.message);
   }
-};
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
+}
 
 // Schemas
 const userSchema = new mongoose.Schema({
