@@ -8,7 +8,8 @@ import { Plus, Edit, Trash2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Student {
-  id: string;
+  _id?: string;
+  id?: string;
   admission_number: string;
   name: string;
   class: string;
@@ -53,8 +54,8 @@ const StudentsManagement = () => {
     setIsAddingNew(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this student?')) {
+  const handleDelete = async (student: Student) => {
+    if (!window.confirm(`Are you sure you want to delete ${student.name}?`)) {
       return;
     }
 
@@ -62,7 +63,7 @@ const StudentsManagement = () => {
     try {
       const { error } = await mongodb
         .from('students')
-        .eq('id', id)
+        .eq('_id', student._id || student.id)
         .delete();
 
       if (error) {
@@ -73,10 +74,43 @@ const StudentsManagement = () => {
           variant: "destructive",
         });
       } else {
-        setStudents(students.filter(student => student.id !== id));
+        setStudents(students.filter(s => s._id !== student._id && s.id !== student.id));
         toast({
           title: "Success",
           description: "Student deleted successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL students? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await mongodb
+        .from('students')
+        .neq('_id', '000000000000000000000000')
+        .delete();
+
+      if (error) {
+        console.error('Error deleting all students:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete all students.",
+          variant: "destructive",
+        });
+      } else {
+        setStudents([]);
+        toast({
+          title: "Success",
+          description: "All students deleted successfully.",
         });
       }
     } catch (error) {
@@ -251,7 +285,6 @@ const StudentsManagement = () => {
               <Button onClick={() => {
                 setIsAddingNew(true);
                 setEditingStudent({
-                  id: '',
                   admission_number: '',
                   name: '',
                   class: '',
@@ -259,6 +292,10 @@ const StudentsManagement = () => {
               }} className="flex flex-col items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 p-2">
                 <Plus className="w-4 h-4" />
                 <span>Add Student</span>
+              </Button>
+              <Button onClick={handleDeleteAll} variant="destructive" className="flex flex-col items-center gap-1 p-2">
+                <Trash2 className="w-4 h-4" />
+                <span>Delete All</span>
               </Button>
               <Button onClick={exportData} variant="outline" className="flex flex-col items-center gap-1 p-2">
                 <Download className="w-4 h-4" />
@@ -366,7 +403,7 @@ const StudentsManagement = () => {
               </thead>
               <tbody>
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                  <tr key={student._id || student.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                       {student.admission_number}
                     </td>
@@ -380,7 +417,7 @@ const StudentsManagement = () => {
                       <Button variant="outline" size="sm" onClick={() => handleEdit(student)} className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(student.id)}>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(student)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>

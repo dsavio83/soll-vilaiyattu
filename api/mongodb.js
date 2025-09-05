@@ -4,11 +4,19 @@ import jwt from 'jsonwebtoken';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI environment variable is not set');
+}
+
 let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) {
     return;
+  }
+
+  if (!MONGODB_URI || typeof MONGODB_URI !== 'string') {
+    throw new Error('MONGODB_URI environment variable must be a valid string');
   }
 
   try {
@@ -109,6 +117,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!MONGODB_URI) {
+      return res.status(500).json({ error: 'Database configuration error' });
+    }
+    
     await connectDB();
 
     const { action, table, query = {}, data, select, orderBy = [], limit = 0 } = req.body;
