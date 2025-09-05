@@ -2,6 +2,9 @@
 
 A Tamil word puzzle game built with React, TypeScript, and MongoDB.
 
+## Repository
+[https://github.com/dsavio83/soll-vilaiyattu.git](https://github.com/dsavio83/soll-vilaiyattu.git)
+
 ## Live Demo
 [https://soll-vilaiyattu.vercel.app](https://soll-vilaiyattu.vercel.app)
 
@@ -37,10 +40,6 @@ This project is configured for Vercel deployment:
 1. Connect your GitHub repository to Vercel
 2. Set environment variables in Vercel dashboard
 3. Deploy automatically on push to main branch
-
-## Admin Credentials
-- Username: `admin`
-- Password: `admin123`
 
 ## License
 MIT License
