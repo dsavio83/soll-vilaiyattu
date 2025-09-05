@@ -580,19 +580,29 @@ export const useGameState = () => {
 
   const moveToLeaderboard = async (studentData: Student) => {
     if (!studentData || foundWords.length === 0) {
-      console.log('Missing studentData or foundWords');
       return false;
     }
 
     try {
       const timeTaken = gameStartTime ? Math.floor((Date.now() - gameStartTime) / 1000) : 0;
+      const today = new Date().toISOString().split('T')[0];
 
       // Get the student ID - use _id for MongoDB, fallback to admission_number
       const studentId = studentData._id || studentData.id || studentData.admission_number;
       
       if (!studentId) {
-        console.error('No student ID found:', studentData);
         return false;
+      }
+
+      // Check if already exists to prevent duplicates
+      const { data: existingEntry } = await mongodb
+        .from('leaderboard_score')
+        .eq('admission_number', studentData.admission_number)
+        .eq('game_date', today)
+        .single();
+
+      if (existingEntry) {
+        return true;
       }
       
 
@@ -615,22 +625,24 @@ export const useGameState = () => {
           return true;
         }
 
+        const guestData = {
+          student_id: String(studentId),
+          admission_number: studentData.admission_number || 'GUEST',
+          name: studentData.name || 'Guest User',
+          class: studentData.class || 'Guest',
+          score: score,
+          time_taken: timeTaken,
+          words_found: foundWords.length,
+          found_words: JSON.stringify(foundWords),
+          found_words_time: JSON.stringify(wordTimings),
+          complete_game: true,
+          attempt_count: attemptCount,
+          game_date: today
+        };
+
         const { error } = await mongodb
           .from('leaderboard_score')
-          .insert([{
-            student_id: String(studentId),
-            admission_number: studentData.admission_number,
-            name: studentData.name,
-            class: studentData.class || 'Guest',
-            score: score,
-            time_taken: timeTaken,
-            words_found: foundWords.length,
-            found_words: JSON.stringify(foundWords),
-            found_words_time: JSON.stringify(wordTimings),
-            complete_game: true,
-            attempt_count: attemptCount,
-            game_date: today
-          }]);
+          .insert([guestData]);
 
         if (error) {
           console.error('Error saving guest user data:', error);
@@ -655,23 +667,25 @@ export const useGameState = () => {
           return true;
         }
 
-        // Insert into leaderboard_score
+        // Insert into leaderboard_score with proper validation
+        const leaderboardData = {
+          student_id: String(studentId),
+          admission_number: studentData.admission_number || 'UNKNOWN',
+          name: studentData.name || 'Unknown Student',
+          class: studentData.class || 'Unknown',
+          score: score,
+          time_taken: timeTaken,
+          words_found: foundWords.length,
+          found_words: JSON.stringify(foundWords),
+          found_words_time: JSON.stringify(wordTimings),
+          complete_game: true,
+          attempt_count: attemptCount,
+          game_date: today
+        };
+
         const { error: leaderboardError } = await mongodb
           .from('leaderboard_score')
-          .insert([{
-            student_id: String(studentId),
-            admission_number: studentData.admission_number,
-            name: studentData.name,
-            class: studentData.class,
-            score: score,
-            time_taken: timeTaken,
-            words_found: foundWords.length,
-            found_words: JSON.stringify(foundWords),
-            found_words_time: JSON.stringify(wordTimings),
-            complete_game: true,
-            attempt_count: attemptCount,
-            game_date: today
-          }]);
+          .insert([leaderboardData]);
 
         if (leaderboardError) {
           console.error('Error saving to leaderboard:', leaderboardError);

@@ -461,22 +461,22 @@ const Leaderboard = () => {
                     <div className="flex justify-between items-end mb-6 px-4">
                       {/* Second Place */}
                       <div className="text-center flex-1">
+                        <div className="text-center mb-2">
+                          <span className="text-xs font-bold text-gray-300 bg-gray-500/20 px-2 py-1 rounded-full border border-gray-400/30">Second Place</span>
+                        </div>
                         <div className="relative mb-3">
-                          <div className="w-16 h-24 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-gray-200 mx-auto">
+                          <div className="w-16 h-24 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-gray-200 mx-auto animate-pulse" style={{ animationDelay: '0.5s' }}>
                             <span className="text-2xl font-bold text-gray-800">2</span>
                           </div>
                           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                            <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                            <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-glow" style={{ animationDelay: '0.5s' }}>
                               <span className="text-lg">🥈</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20 shadow-lg mx-auto max-w-24">
-                          <h3 className="font-bold text-white text-xs mb-1 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
-                            {filteredLeaderboard[1].name.length > 8 ? 
-                              `${filteredLeaderboard[1].name.substring(0, 8)}...` : 
-                              filteredLeaderboard[1].name
-                            }
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20 shadow-lg mx-auto max-w-24 animate-glow" style={{ animationDelay: '0.5s' }}>
+                          <h3 className="font-bold text-white text-xs mb-1 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                            {filteredLeaderboard[1].name}
                           </h3>
                           <div className="text-lg font-bold text-gray-300 mb-1">{filteredLeaderboard[1].score}</div>
                           <div className="text-xs text-purple-200">{formatTime(filteredLeaderboard[1].time_taken)}</div>
@@ -485,12 +485,15 @@ const Leaderboard = () => {
 
                       {/* First Place - Enhanced */}
                       <div className="text-center flex-1">
+                        <div className="text-center mb-2">
+                          <span className="text-sm font-bold text-yellow-300 bg-yellow-500/20 px-3 py-1 rounded-full border border-yellow-400/50 animate-glow">🥇 Today's Champions</span>
+                        </div>
                         <div className="relative mb-4">
-                          <div className="w-20 h-32 bg-gradient-to-t from-yellow-500 via-yellow-400 to-yellow-300 rounded-t-3xl flex items-end justify-center pb-3 shadow-2xl border-4 border-yellow-200 mx-auto transform hover:scale-105 transition-all duration-300">
+                          <div className="w-20 h-32 bg-gradient-to-t from-yellow-500 via-yellow-400 to-yellow-300 rounded-t-3xl flex items-end justify-center pb-3 shadow-2xl border-4 border-yellow-200 mx-auto transform hover:scale-105 transition-all duration-300 animate-glow">
                             <span className="text-3xl font-bold text-yellow-900 animate-pulse">1</span>
                           </div>
                           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-full flex items-center justify-center shadow-2xl border-4 border-white animate-bounce">
+                            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-full flex items-center justify-center shadow-2xl border-4 border-white animate-bounce animate-glow">
                               <Crown className="w-8 h-8 text-white" />
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full animate-ping opacity-30"></div>
@@ -499,12 +502,9 @@ const Leaderboard = () => {
                           <Sparkles className="absolute top-2 left-2 w-4 h-4 text-yellow-300 animate-spin" />
                           <Sparkles className="absolute top-4 right-1 w-3 h-3 text-orange-300 animate-spin delay-500" />
                         </div>
-                        <div className="bg-gradient-to-br from-yellow-500/30 to-orange-500/30 backdrop-blur-lg rounded-2xl p-4 border-2 border-yellow-300/50 shadow-2xl mx-auto max-w-32 transform hover:scale-105 transition-all duration-300">
-                          <h3 className="font-bold text-white text-sm mb-2 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
-                            {filteredLeaderboard[0].name.length > 10 ? 
-                              `${filteredLeaderboard[0].name.substring(0, 10)}...` : 
-                              filteredLeaderboard[0].name
-                            }
+                        <div className="bg-gradient-to-br from-yellow-500/30 to-orange-500/30 backdrop-blur-lg rounded-2xl p-4 border-2 border-yellow-300/50 shadow-2xl mx-auto max-w-32 transform hover:scale-105 transition-all duration-300 animate-glow" style={{ animationDelay: '0.2s' }}>
+                          <h3 className="font-bold text-white text-sm mb-2 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                            {filteredLeaderboard[0].name}
                           </h3>
                           <div className="text-2xl font-bold text-yellow-200 mb-1 animate-pulse">{filteredLeaderboard[0].score}</div>
                           <div className="text-xs text-yellow-300 font-medium">{formatTime(filteredLeaderboard[0].time_taken)}</div>
@@ -513,22 +513,22 @@ const Leaderboard = () => {
 
                       {/* Third Place */}
                       <div className="text-center flex-1">
+                        <div className="text-center mb-2">
+                          <span className="text-xs font-bold text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full border border-orange-400/30">Third Place</span>
+                        </div>
                         <div className="relative mb-3">
-                          <div className="w-14 h-20 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-orange-200 mx-auto">
+                          <div className="w-14 h-20 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-orange-200 mx-auto animate-pulse" style={{ animationDelay: '0.8s' }}>
                             <span className="text-xl font-bold text-orange-800">3</span>
                           </div>
                           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-glow" style={{ animationDelay: '0.8s' }}>
                               <span className="text-sm">🥉</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20 shadow-lg mx-auto max-w-20">
-                          <h3 className="font-bold text-white text-xs mb-1 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
-                            {filteredLeaderboard[2].name.length > 7 ? 
-                              `${filteredLeaderboard[2].name.substring(0, 7)}...` : 
-                              filteredLeaderboard[2].name
-                            }
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20 shadow-lg mx-auto max-w-20 animate-glow" style={{ animationDelay: '0.8s' }}>
+                          <h3 className="font-bold text-white text-xs mb-1 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                            {filteredLeaderboard[2].name}
                           </h3>
                           <div className="text-lg font-bold text-orange-300 mb-1">{filteredLeaderboard[2].score}</div>
                           <div className="text-xs text-purple-200">{formatTime(filteredLeaderboard[2].time_taken)}</div>
@@ -571,18 +571,21 @@ const Leaderboard = () => {
                     <div className="flex justify-center items-end mb-8 px-4">
                       {/* Second Place */}
                       <div className="text-center flex-1 max-w-48">
+                        <div className="text-center mb-3">
+                          <span className="text-sm font-bold text-gray-300 bg-gray-500/20 px-3 py-1 rounded-full border border-gray-400/30">Second Place</span>
+                        </div>
                         <div className="relative mb-4">
-                          <div className="w-20 h-28 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-2xl flex items-end justify-center pb-3 shadow-xl border-2 border-gray-200 mx-auto">
+                          <div className="w-20 h-28 bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-2xl flex items-end justify-center pb-3 shadow-xl border-2 border-gray-200 mx-auto animate-glow" style={{ animationDelay: '0.5s' }}>
                             <span className="text-3xl font-bold text-gray-800">2</span>
                           </div>
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                            <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-glow" style={{ animationDelay: '0.5s' }}>
                               <span className="text-xl">🥈</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-3 border border-white/20 shadow-lg mx-auto">
-                          <h3 className="font-bold text-white text-lg mb-2 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-3 border border-white/20 shadow-lg mx-auto animate-glow" style={{ animationDelay: '0.5s' }}>
+                          <h3 className="font-bold text-white text-lg mb-2 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
                             {filteredLeaderboard[1].name}
                           </h3>
                           <p className="text-gray-300 text-sm mb-2">{getClassDisplayName(filteredLeaderboard[1].class)}</p>
@@ -594,18 +597,21 @@ const Leaderboard = () => {
 
                       {/* First Place - Bigger */}
                       <div className="text-center flex-1 max-w-56">
+                        <div className="text-center mb-3">
+                          <span className="text-lg font-bold text-yellow-300 bg-yellow-500/20 px-4 py-2 rounded-full border border-yellow-400/50 animate-glow">🥇 Today's Champions</span>
+                        </div>
                         <div className="relative mb-4">
-                          <div className="w-24 h-36 bg-gradient-to-t from-yellow-500 to-yellow-300 rounded-t-3xl flex items-end justify-center pb-4 shadow-2xl border-3 border-yellow-200 mx-auto">
+                          <div className="w-24 h-36 bg-gradient-to-t from-yellow-500 to-yellow-300 rounded-t-3xl flex items-end justify-center pb-4 shadow-2xl border-3 border-yellow-200 mx-auto animate-glow">
                             <span className="text-4xl font-bold text-yellow-800">1</span>
                           </div>
                           <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-xl border-3 border-white animate-pulse">
+                            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-xl border-3 border-white animate-pulse animate-glow">
                               <span className="text-3xl">👑</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-xl p-4 border border-yellow-300/30 shadow-xl mx-auto">
-                          <h3 className="font-bold text-white text-xl mb-2 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-xl p-4 border border-yellow-300/30 shadow-xl mx-auto animate-glow" style={{ animationDelay: '0.2s' }}>
+                          <h3 className="font-bold text-white text-xl mb-2 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
                             {filteredLeaderboard[0].name}
                           </h3>
                           <p className="text-yellow-200 text-sm mb-3">{getClassDisplayName(filteredLeaderboard[0].class)}</p>
@@ -617,18 +623,21 @@ const Leaderboard = () => {
 
                       {/* Third Place */}
                       <div className="text-center flex-1 max-w-44">
+                        <div className="text-center mb-3">
+                          <span className="text-sm font-bold text-orange-300 bg-orange-500/20 px-3 py-1 rounded-full border border-orange-400/30">Third Place</span>
+                        </div>
                         <div className="relative mb-4">
-                          <div className="w-18 h-24 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-orange-200 mx-auto">
+                          <div className="w-18 h-24 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-2xl flex items-end justify-center pb-2 shadow-xl border-2 border-orange-200 mx-auto animate-glow" style={{ animationDelay: '0.8s' }}>
                             <span className="text-2xl font-bold text-orange-800">3</span>
                           </div>
                           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-glow" style={{ animationDelay: '0.8s' }}>
                               <span className="text-lg">🥉</span>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-3 border border-white/20 shadow-lg mx-auto">
-                          <h3 className="font-bold text-white text-base mb-2 leading-tight" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-3 border border-white/20 shadow-lg mx-auto animate-glow" style={{ animationDelay: '0.8s' }}>
+                          <h3 className="font-bold text-white text-base mb-2 leading-tight whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
                             {filteredLeaderboard[2].name}
                           </h3>
                           <p className="text-orange-300 text-sm mb-2">{getClassDisplayName(filteredLeaderboard[2].class)}</p>
@@ -721,7 +730,7 @@ const Leaderboard = () => {
                                     <div className="flex items-start justify-between mb-1 md:mb-2">
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                          <h3 className={`text-sm md:text-xl font-bold leading-tight group-hover:scale-105 transition-transform duration-300 ${
+                                          <h3 className={`text-sm md:text-xl font-bold leading-tight group-hover:scale-105 transition-transform duration-300 whitespace-nowrap overflow-hidden text-ellipsis ${
                                             isCurrentUser ? 'text-blue-300' : 'text-white'
                                           }`} style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}>
                                             {entry.name}
