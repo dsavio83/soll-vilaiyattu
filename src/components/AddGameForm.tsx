@@ -53,14 +53,43 @@ const AddGameForm = ({ editingGame, onGameSaved }: AddGameFormProps) => {
         7: editingGame.words_7_letter && editingGame.words_7_letter.length > 0 ? editingGame.words_7_letter : [''],
       });
     } else {
-      setFormData({
-        game_date: new Date().toISOString().split('T')[0],
-        center_letter: '',
-        surrounding_letters: '',
-      });
+      // Get next date after last game
+      getNextGameDate();
       setWordInputs({ 2: [''], 3: [''], 4: [''], 5: [''], 6: [''], 7: [''] });
     }
   }, [editingGame]);
+
+  const getNextGameDate = async () => {
+    try {
+      const { data } = await mongodb
+        .from('word_puzzle')
+        .order('game_date', { ascending: false })
+        .limit(1);
+      
+      let nextDate;
+      if (data && data.length > 0) {
+        const lastDate = new Date(data[0].game_date);
+        lastDate.setDate(lastDate.getDate() + 1);
+        nextDate = lastDate.toISOString().split('T')[0];
+      } else {
+        nextDate = new Date().toISOString().split('T')[0];
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        game_date: nextDate,
+        center_letter: '',
+        surrounding_letters: '',
+      }));
+    } catch (error) {
+      setFormData(prev => ({
+        ...prev,
+        game_date: new Date().toISOString().split('T')[0],
+        center_letter: '',
+        surrounding_letters: '',
+      }));
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -460,6 +489,17 @@ const AddGameForm = ({ editingGame, onGameSaved }: AddGameFormProps) => {
                           <Input
                             value={word}
                             onChange={(e) => updateWordInput(length, index, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && e.shiftKey) {
+                                e.preventDefault();
+                                addWordInput(length);
+                                setTimeout(() => {
+                                  const inputs = document.querySelectorAll(`input[placeholder="${length} letter word"]`);
+                                  const nextInput = inputs[index + 1] as HTMLInputElement;
+                                  if (nextInput) nextInput.focus();
+                                }, 0);
+                              }
+                            }}
                             style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}
                             placeholder={`${length} letter word`}
                             className={getGraphemeClusters(word).length === length ? 'bg-green-100' : ''}
