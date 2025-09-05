@@ -389,7 +389,7 @@ const AddGameForm = ({ editingGame, onGameSaved }: AddGameFormProps) => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="game_date">Game Date</Label>
                 <Input
@@ -410,36 +410,29 @@ const AddGameForm = ({ editingGame, onGameSaved }: AddGameFormProps) => {
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="surrounding_letters">Surrounding Letters (comma separated)</Label>
-              <Input
-                id="surrounding_letters"
-                value={formData.surrounding_letters}
-                onChange={(e) => handleInputChange('surrounding_letters', e.target.value)}
-                style={{ fontFamily: 'Noto Sans Tamil, sans-serif' }}
-                placeholder="க, ல, த, ங, ப, ள"
-                required
-              />
-            </div>
-
-            {/* New Import Section */}
-            <div className="space-y-2">
-              <Label htmlFor="word_import">Import Words from CSV</Label>
-              <div className="flex items-center gap-2">
+              <div>
+                <Label htmlFor="surrounding_letters">
+                  Surrounding Letters (comma separated)
+                  <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                    formData.surrounding_letters.split(',').filter(s => s.trim()).length === 6 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {formData.surrounding_letters.split(',').filter(s => s.trim()).length}/6
+                  </span>
+                </Label>
                 <Input
-                  type="file"
-                  id="word_import"
-                  accept=".csv"
-                  onChange={handleImportWords} // This will be the handler
-                  className="flex-1"
+                  id="surrounding_letters"
+                  value={formData.surrounding_letters}
+                  onChange={(e) => handleInputChange('surrounding_letters', e.target.value)}
+                  style={{ 
+                    fontFamily: 'Noto Sans Tamil, sans-serif',
+                    backgroundColor: formData.surrounding_letters.split(',').filter(s => s.trim()).length === 6 ? '#f0fdf4' : 'white'
+                  }}
+                  placeholder="க, ல, த, ங, ப, ள"
+                  required
                 />
-                <Button type="button" onClick={() => document.getElementById('word_import')?.click()}>
-                  Browse
-                </Button>
               </div>
-              <p className="text-sm text-gray-500">Upload a CSV file with one word per line or column.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
